@@ -9,13 +9,15 @@
         ><a href="#" class="btn btn-info my-2">登陆</a></router-link
       >
       <li class="list-inline-item" href="#">
-        <a href="#" class="btn btn-info my-2">注册</a>
+        <router-link class="list-inline-item" :to="`/signup`">
+          <a href="#" class="btn btn-info my-2">注册</a></router-link
+        >
       </li>
     </ul>
 
     <ul v-else class="list-inline mb-0">
       <li class="list-inline-item" href="#">
-        <Dropdown :title="`hello ${user.name}`">
+        <Dropdown :title="`hello ${user.nickName}`">
           <dropdown-item
             ><router-link :to="`/create`" class="dropdown-item"
               >新建文章</router-link
@@ -25,7 +27,9 @@
             ><a href="#" class="dropdown-item">编辑资料</a></dropdown-item
           >
           <dropdown-item
-            ><a href="#" class="dropdown-item">退出登录</a></dropdown-item
+            ><button @click="logOut" class="dropdown-item">
+              退出登录
+            </button></dropdown-item
           >
         </Dropdown>
       </li>
@@ -37,12 +41,10 @@
 import { defineComponent, PropType } from "vue";
 import Dropdown from "./Dropdown.vue";
 import DropdownItem from "./DropdownItem.vue";
+import { UserProps } from "../store";
+import { useStore } from "vuex";
+import router from "@/router";
 
-export interface UserProps {
-  isLogin: boolean;
-  name?: string;
-  id?: number;
-}
 export default defineComponent({
   components: { Dropdown, DropdownItem },
   name: "GlobalHeader",
@@ -51,6 +53,16 @@ export default defineComponent({
       type: Object as PropType<UserProps>,
       required: true,
     },
+  },
+  setup() {
+    const store = useStore();
+    const logOut = () => {
+      store.commit("logout");
+      router.push("/login");
+    };
+    return {
+      logOut,
+    };
   },
 });
 </script>

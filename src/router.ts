@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from './views/Home.vue';
 import Login from './views/Login.vue';
+import Signup from './views/Signup.vue'
 import CreatePost from './views/CreatePost.vue';
 import ColumnDetail from './views/ColumnDetail.vue';
 
 import store from './store';
+import axios from 'axios';
 
 const routerHistory = createWebHistory();
 const router = createRouter({
@@ -35,19 +37,46 @@ const router = createRouter({
         requiredLogin: true,
       },
     },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: Signup,
+    }
   ],
 });
 
 // 在进入路由环境前
 router.beforeEach((to, from, next) => {
   // console.log(to.meta);路由元信息
-
-  if (to.meta.requiredLogin && !store.state.user.isLogin) {
-    next('/login');
-  } else if (to.meta.redirectAlreadyLogin && store.state.user.isLogin) {
-    next('/');
+  const { user, token } = store.state
+  const { requiredLogin, redirectAlreadyLogin } = to.meta
+  if (!user.isLogin) {
+    if (token) {
+      axios.defaults.headers.common.Authorization = `Bearer ${token}`
+      store.dispatch('fetchCurrentUser').then(() => {
+        if (redirectAlreadyLogin) {
+          next('/')
+        } else {
+          next()
+        }
+      }).catch(e => {
+        console.error(e);
+        store.commit('logout')
+        next('login')
+      })
+    } else {
+      if (requiredLogin) {
+        next('login')
+      } else {
+        next()
+      }
+    }
   } else {
-    next();
+    if (redirectAlreadyLogin) {
+      next('/login')
+    } else {
+      next()
+    }
   }
 });
 

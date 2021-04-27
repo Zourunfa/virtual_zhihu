@@ -3,15 +3,15 @@
     <h5 class="my-4 text-center">登录</h5>
     <ValidateForm @form-submit="onFormSubmit">
       <div class="mb-3">
-        <label for="exampleInputEmail1" class="form-label">Phone number</label>
+        <label for="exampleInputEmail1" class="form-label">email</label>
         <ValidateInput
           :rules="emailRules"
           v-model="emailVal"
-          placeholder="请输入手机号"
+          placeholder="请输入账户邮箱"
           type="text"
           ref="inputRef"
         />
-        {{ emailVal }}
+        <!-- {{ emailVal }} -->
         <div class="form-text" v-if="emailRef.error">
           {{ emailRef.message }}
         </div>
@@ -43,6 +43,7 @@ import ValidateInput, {
   PassProp,
 } from "../components/ValidateInput.vue";
 import { useStore } from "vuex";
+import createMessage from "../components/createMessage";
 
 export default defineComponent({
   name: "Login",
@@ -60,8 +61,8 @@ export default defineComponent({
     const passwordVal = ref("123");
 
     const emailRules: RulesProp = [
-      { type: "required", message: "手机号不能为空" },
-      { type: "email", message: "请输入正确格式的手机号" },
+      { type: "required", message: "邮箱不能为空" },
+      { type: "email", message: "请输入正确格式的邮箱" },
       { type: "range", message: "请输入5-15为字符" },
     ];
     const passwordRules: PassProp = [
@@ -84,9 +85,25 @@ export default defineComponent({
       //   console.log(inputRef.value);
       //   inputRef.value = ''
       // }
-      if (!res) {
-        router.push("/");
-        store.commit("login");
+      console.log(1);
+      console.log(res);
+
+      if (res) {
+        console.log(2);
+        const payload = {
+          email: emailVal.value,
+          password: passwordVal.value,
+        };
+        store
+          .dispatch("loginAndFetch", payload)
+          .then(() => {
+            // console.log(data);
+            createMessage(`登录成功`, "success");
+            router.push("/");
+          })
+          .catch((e) => {
+            console.log(e);
+          });
       }
     };
 

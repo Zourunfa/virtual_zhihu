@@ -56,12 +56,21 @@ import axios from 'axios'
 
 axios.interceptors.request.use(config => {
   store.commit('setLoading', true)
+  store.commit('setError', { status: false, message: '' })
   return config
 })
 
+// 第二个回调函数处理账号密码错误登录失败的逻辑
 axios.interceptors.response.use(config => {
   store.commit('setLoading', false)
+
   return config
+}, e => {
+  console.log(e.response);
+  const { error } = e.response.data
+  store.commit('setError', { status: true, message: error })
+  store.commit('setLoading', false)
+  return Promise.reject(error)
 })
 
 const app = createApp(App);

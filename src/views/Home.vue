@@ -12,6 +12,17 @@
         </div>
       </div>
     </section>
+    <Uploader action="/api/upload" @file-uploaded="onFileUploaded">
+      <!-- <h2>电视收到货库</h2> -->
+      <!-- <template #loading>
+        <div class="spinner-border" role="status">
+          <span class="sr-only"></span>
+        </div>
+      </template> -->
+      <template #uploaded="dataProps">
+        <img :src="dataProps.uploadedData.data.url" alt="" width="200" />
+      </template>
+    </Uploader>
     <h4 class="font-weight-bold text-center">发现精彩</h4>
     <ColumnList :list="list"></ColumnList>
     <div class="d-grid gap-2 col-6 mx-auto">
@@ -34,13 +45,21 @@ import { defineComponent, computed, onMounted } from "vue";
 // import { GlobalDataProps } from '../store'
 // import useLoadMore from '../hooks/useLoadMore'
 import ColumnList from "../components/ColumnList.vue";
+import Uploader from "../components/Uploader.vue";
 import { useStore } from "vuex";
-import { GlobalDataProps } from "../store";
+import { GlobalDataProps, ImageProps } from "../store";
+import createMessage from "@/components/createMessage";
+export interface ResponseType<p = {}> {
+  code: number;
+  msg: string;
+  data: p;
+}
 
 export default defineComponent({
   name: "Home",
   components: {
     ColumnList,
+    Uploader,
   },
   setup() {
     const store = useStore<GlobalDataProps>();
@@ -53,10 +72,14 @@ export default defineComponent({
     });
     const list = computed(() => store.state.columns);
     // console.log(list);
+    const onFileUploaded = (rawData: ResponseType<ImageProps>) => {
+      createMessage(`上传图片ID ${rawData.data._id}`, "success");
+    };
 
     return {
       list,
       bigLen,
+      onFileUploaded,
       //     loadMorePage,
       //     isLastPage
     };

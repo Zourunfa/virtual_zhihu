@@ -6,7 +6,7 @@
     >
       <div class="col-3 text-center">
         <img
-          :src="column.avatar.url"
+          src="@/assets/lizhi.jpg"
           :alt="column.title"
           class="rounded-circle border w-100"
         />
@@ -42,13 +42,19 @@ export default defineComponent({
     });
     //  find方法找到满足条件的第一元素
     // filter方法找到满足条件的所有元素
+    const defaultUrl = "@/assets/lizhi.jpg";
+    const column = computed(() => {
+      const res = store.getters.getColumnsById(currentId);
 
-    const column = computed(() => store.getters.getColumnsById(currentId));
+      // res.avatar.fitUrl = "@/assets/lizhi.jpg";
+      return res;
+    });
     // if (!column.value.avatar) {
     //   column.value.avatar = {
     //     url: require("@/assets/lizhi.jpg"),
     //   };
     // }
+    // console.log(store.getters.getColumnsById(currentId).avatar);
 
     const list = computed(() => store.getters.getPostsById(currentId));
     // console.log(list);
@@ -59,6 +65,7 @@ export default defineComponent({
       route,
       column,
       list,
+      defaultUrl,
     };
   },
 });

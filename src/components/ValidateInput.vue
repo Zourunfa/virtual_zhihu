@@ -27,17 +27,19 @@
 import { defineComponent, reactive, PropType, onMounted } from "vue";
 import { emitter } from "./ValidateForm.vue";
 
-const emailReg = /^[1][3,4,5,7,8][0-9]{9}$/;
+const emailReg = /^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,5}$/;
 // const passwordReg = /^.*(?=.{6,})(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*? ]).*$/;
-const rangeReg = /^\w{5,15}$/;
+const rangeReg = /[\s\S]{1,20}$/;
 interface RuleProp {
-  type: "required" | "email" | "range";
+  type: "required" | "email" | "range" | "custom";
   message: string;
+  validator?: () => boolean;
 }
 
 interface PassRule {
-  type: "required" | "password" | "range";
+  type: "required" | "password" | "range" | "custom";
   message: string;
+  validator?: () => boolean;
 }
 
 export type RulesProp = RuleProp[];
@@ -94,11 +96,15 @@ export default defineComponent({
             case "range":
               passed = rangeReg.test(inputRef.val);
               break;
+            case "custom":
+              passed = rule.validator ? rule.validator() : true;
+              break;
             default:
               break;
           }
           return passed;
         });
+        console.log(allPassed);
 
         inputRef.error = !allPassed;
         return allPassed;
