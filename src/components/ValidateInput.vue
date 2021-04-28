@@ -1,22 +1,21 @@
 <template lang="">
+ <!-- <h2>{{inputRef.val + '1'}}</h2> -->
   <div class="validate-input-container pb-3">
     <input 
     v-if="tag!='textarea'"
     class="form-control" 
-    :value = 'inputRef.val'
+    v-model="inputRef.val"
     :class = "{'is-invalid':inputRef.error}"
     @blur="validateInput"
-    @input="updateValue"
     v-bind="$attrs"
     >
-        <textarea
+    <textarea
     v-else
     class="form-control" 
-    :value = 'inputRef.val'
     :class = "{'is-invalid':inputRef.error}"
     @blur="validateInput"
-    @input="updateValue"
     v-bind="$attrs"
+     v-model="inputRef.val"
     >
     </textarea>
     <span v-if ="inputRef.error" class = "invalid-feedback">{{inputRef.message}}</span>
@@ -24,7 +23,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, PropType, onMounted } from "vue";
+import {
+  defineComponent,
+  reactive,
+  PropType,
+  onMounted,
+  // watch,
+  computed,
+} from "vue";
 import { emitter } from "./ValidateForm.vue";
 
 const emailReg = /^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,5}$/;
@@ -50,7 +56,7 @@ export default defineComponent({
   name: "ValidateInput",
   props: {
     rules: Array as PropType<RulesProp>,
-    modeValue: String,
+    modelValue: String,
     tag: {
       type: String as PropType<TagType>,
       default: "input",
@@ -61,21 +67,38 @@ export default defineComponent({
     // context 是 setup() 的第二个形参，它是一个上下文对象
     // ，可以通过 context 来访问Vue的实例 this
     // console.log(context.attrs);
-    console.log(props);
+    console.log(props.modelValue);
 
     const inputRef = reactive({
-      val: props.modeValue || "",
+      val: computed({
+        get: () => {
+          return props.modelValue || "";
+        },
+        set: (val) => {
+          context.emit("update:modelValue", val);
+        },
+      }),
       error: false,
       message: "",
     });
-    // vue3实现自定义组件的双向绑定
-    const updateValue = (e: KeyboardEvent) => {
-      const targetValue = (e.target as HTMLInputElement).value;
-      // console.log(targetValue);
+    console.log(inputRef.val);
 
-      inputRef.val = targetValue;
-      context.emit("update:modelValue", targetValue);
-    };
+    // watch(
+    //   () => props.modeValue,
+    //   (newValue) => {
+    //     console.log("watch trrigged");
+    //     inputRef.val = newValue || "";
+    //   }
+    // );
+
+    // // vue3实现自定义组件的双向绑定
+    // const updateValue = (e: KeyboardEvent) => {
+    //   const targetValue = (e.target as HTMLInputElement).value;
+    //   // console.log(targetValue);
+
+    //   inputRef.val = targetValue;
+    //   context.emit("update:modelValue", targetValue);
+    // };
 
     const validateInput = () => {
       if (props.rules) {
@@ -118,7 +141,7 @@ export default defineComponent({
     return {
       inputRef,
       validateInput,
-      updateValue,
+      // updateValue,
     };
   },
 });

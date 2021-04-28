@@ -13,6 +13,7 @@
         name="uploaded"
         v-else-if="fileStatus === 'success'"
       >
+        {{ uploadedData }}
         <button class="btn btn-primary" disabled>上传成功</button>
       </slot>
       <slot name="default" v-else>
@@ -28,7 +29,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, PropType } from "vue";
+import { defineComponent, ref, PropType, watch } from "vue";
 import axios from "axios";
 type UploadStatus = "ready" | "loading" | "success" | "error";
 type CheckFunction = (file: File) => boolean;
@@ -49,18 +50,18 @@ export default defineComponent({
   emits: ["file-uploaded", "file-uploaded-error"],
   setup(props, context) {
     const fileInput = ref<null | HTMLInputElement>(null);
-    // console.log(props.uploaded);
+    console.log(props);
     const fileStatus = ref<UploadStatus>(props.uploaded ? "success" : "ready");
     const uploadedData = ref(props.uploaded);
-    // watch(
-    //   () => props.uploaded,
-    //   (newValue) => {
-    //     if (newValue) {
-    //       fileStatus.value = "success";
-    //       uploadedData.value = newValue;
-    //     }
-    //   }
-    // );
+    watch(
+      () => props.uploaded,
+      (newValue) => {
+        if (newValue) {
+          fileStatus.value = "success";
+          uploadedData.value = newValue;
+        }
+      }
+    );
     const triggerUpload = () => {
       console.log(1);
 

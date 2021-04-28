@@ -1,11 +1,13 @@
 import { createStore, Commit } from 'vuex';
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 export interface UserProps {
   isLogin: boolean;
   nickName?: string;
   _id?: string;
-  column: string;
-  email: string;
+  column?: string;
+  email?: string;
+  avatar?: ImageProps;
+  description?: string;
 }
 
 // export interface PostProps {
@@ -28,6 +30,7 @@ export interface PostProps {
   column: string;
   author?: string | UserProps;
   isHTML?: boolean;
+  // data?: string
 }
 
 export interface ColumnProps {
@@ -56,6 +59,7 @@ export interface ImageProps {
   _id?: string;
   url?: string;
   createdAt?: string;
+  fitUrl?: string;
 }
 
 
@@ -68,7 +72,12 @@ const getAndCommit = async (url: string, mutationName: string, commit: Commit) =
 
 const postAndCommit = async (url: string, mutationName: string, commit: Commit, payload: any) => {
   const res = await axios.post(url, payload)
-  // console.log(res);
+  commit(mutationName, res.data)
+  return res.data
+}
+const asyncAndCommit = async (url: string, mutationName: string, commit: Commit, payload: any, config: AxiosRequestConfig = { method: 'get' }) => {
+  const res = await axios(url, config)
+  console.log(res.data);
 
   commit(mutationName, res.data)
   return res.data
@@ -102,11 +111,16 @@ const store = createStore<GlobalDataProps>({
     fetchPosts(state, rawData) {
       state.posts = rawData.data.list
     },
+    fetchPost(state, rawData) {
+      state.posts.push(rawData.data)
+    },
     setLoading(state, status) {
       state.loading = status
     },
     login(state, rawData) {
       const { token } = rawData.data
+      console.log(token);
+
       state.token = token
       // 用localStorage在本地存储token
       localStorage.setItem('token', token)
@@ -126,8 +140,32 @@ const store = createStore<GlobalDataProps>({
         localStorage.removeItem('token')
       delete axios.defaults.headers.common.Authorization
     },
+    updatePost(state, { data }) {
+
+      state.posts = state.posts.map(post => {
+        console.log(data);
+
+        if (post._id === data._id) {
+          console.log(data._id);
+
+
+          return data
+        } else {
+          return post
+        }
+      })
+    },
+    deletePost(state, { data }) {
+      console.log(state.posts, data);
+      state.posts = state.posts.filter(item => {
+        return item !== data._id
+      })
+
+    }
+
 
   },
+
   // getters就好比store的计算属性
   getters: {
     biggerColumnsLen(state) {
@@ -145,6 +183,19 @@ const store = createStore<GlobalDataProps>({
         return c.column === cid
       });
     },
+    getCurrentPost: (state) => (id: string) => {
+      // console.log(state.posts);
+      let obj = {}
+      // console.log(state.posts.filter(item => item._id === id));
+      state.posts.forEach(item => {
+        if (item._id === id) {
+          obj = item
+        }
+      })
+
+      return obj
+
+    }
   },
   actions: {
     fetchColumns({ commit }) {
@@ -155,6 +206,22 @@ const store = createStore<GlobalDataProps>({
     },
     fetchPosts({ commit }, cid) {
       return getAndCommit(`/api/columns/${cid}/posts`, 'fetchPosts', commit)
+    },
+    fetchPost({ state, commit }, id) {
+      // console.log(state.posts);
+
+      const currentPost = state.posts.filter(item => {
+
+        item._id === id
+      })
+      // console.log(currentPost);
+      console.log(getAndCommit(`/api/posts/${id}`, 'fetchPost', commit));
+
+      // if (!currentPost || !currentPost.content) {
+      return getAndCommit(`/api/posts/${id}`, 'fetchPost', commit)
+      // } else {
+      //   return Promise.resolve({ data: currentPost })
+      // }
     },
     login({ commit }, payload) {
       return postAndCommit(`/api/user/login`, 'login', commit, payload)
@@ -169,7 +236,16 @@ const store = createStore<GlobalDataProps>({
     },
     createPost({ commit }, payload) {
       return postAndCommit('/api/posts', 'createPost', commit, payload)
-    }
+    },
+    updatePost({ commit }, { id, payload }) {
+      console.log(payload);
+
+      return asyncAndCommit(`/api/posts/${id}`, 'updatePost', commit, { method: 'patch', data: payload })
+    },
+    deletePost({ commit }, id) {
+      // console.log(id);
+      return asyncAndCommit(`/api/posts/${id}`, 'deletePost', commit, { method: 'delete' })
+    },
   }
 });
 

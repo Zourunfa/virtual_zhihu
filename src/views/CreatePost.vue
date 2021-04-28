@@ -1,7 +1,8 @@
 <template>
   <div class="create-post-page">
-    <h4 class="my-4 text-center">新建文章</h4>
-
+    <!-- {{ isEditMode + "12214" }} -->
+    <h4 class="my-4 text-center">{{ isEditMode ? "编辑文章" : "新建文章" }}</h4>
+    <!-- {{ titleVal }} -->
     <!-- <input type="file" name="file" @change.prevent="handleFileChange" /> -->
     <Uploader
       action="/api/upload"
@@ -36,7 +37,7 @@
           v-model="titleVal"
         />
       </div>
-
+      {{ titleVal }}
       <div class="mb-3">
         <label class="form-label">文章详情：</label>
         <ValidateInput
@@ -48,25 +49,32 @@
         />
       </div>
       <template #submit>
-        <span class="btn btn-danger">发表文章</span>
+        <span class="btn btn-danger">{{
+          isEditMode ? "更新文章" : "发表文章"
+        }}</span>
       </template>
     </ValidateForm>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
 import Uploader from "../components/Uploader.vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import ValidateForm from "../components/ValidateForm.vue";
 import ValidateInput from "../components/ValidateInput.vue";
 import createMessage from "../components/createMessage";
 import { beforeUploadCheck } from "../helper";
 import { ResponseType } from "./Home.vue";
+// import {}
 // import axios from "axios";
 import { useStore } from "vuex";
 import { ImageProps } from "../store";
 import { PostProps } from "../store";
+
+export interface UploadType {
+  data?: string | ImageProps | undefined;
+}
 
 export default defineComponent({
   name: "Login",
@@ -77,10 +85,36 @@ export default defineComponent({
   },
   setup() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const uploadedData = ref();
+
     const titleVal = ref("");
     const contentVal = ref("");
     const store = useStore();
+    const route = useRoute();
+    const isEditMode = !!route.query.id;
     // const uploadedData = ref();
+    onMounted(() => {
+      if (isEditMode) {
+        store
+          .dispatch("fetchPost", route.query.id)
+          .then((rawData: ResponseType<PostProps>) => {
+            const currentPost = rawData.data;
+            // console.log(currentPost.image);
+
+            if (currentPost.image) {
+              // uploadedData = currentPost.image as Ref<any>;
+              // uploadedData = "sadsad";
+              uploadedData.value = { data: currentPost.image };
+            }
+            // console.log(uploadedData);
+            // console.log(currentPost.title);
+
+            titleVal.value = currentPost.title;
+            contentVal.value = currentPost.content || "";
+          });
+      }
+    });
+    // console.log(uploadedData.value);
     const router = useRouter();
     let imageId = "";
     const uploadCheck = (file: File) => {
@@ -102,9 +136,12 @@ export default defineComponent({
         imageId = rawData.data._id;
       }
     };
+    // console.log(titleVal.value);
 
     const onFormSubmit = (res: boolean) => {
       if (res) {
+        console.log(titleVal.value);
+
         const { column, _id } = store.state.user;
         const newPost: PostProps = {
           // _id: new Date().getTime(),
@@ -116,7 +153,11 @@ export default defineComponent({
         if (imageId) {
           newPost.image = imageId;
         }
-        store.dispatch("createPost", newPost).then(() => {
+        const actionName = isEditMode ? "updatePost" : "createPost";
+        const sendData = isEditMode
+          ? { id: route.query.id, payload: newPost }
+          : newPost;
+        store.dispatch(actionName, sendData).then(() => {
           createMessage("发表成功", "success");
         });
         router.push(`/column/${column}`);
@@ -131,6 +172,8 @@ export default defineComponent({
       contentVal,
       uploadCheck,
       handleFileUploaded,
+      uploadedData,
+      isEditMode,
     };
   },
 });

@@ -6,7 +6,7 @@
     >
       <div class="col-3 text-center">
         <img
-          src="@/assets/lizhi.jpg"
+          :src="column.avatar && column.avatar.url"
           :alt="column.title"
           class="rounded-circle border w-100"
         />

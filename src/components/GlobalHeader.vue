@@ -31,6 +31,11 @@
               退出登录
             </button></dropdown-item
           >
+          <dropdown-item
+            ><router-link :to="`/column/${user.column}`" class="dropdown-item"
+              >我的专栏</router-link
+            ></dropdown-item
+          >
         </Dropdown>
       </li>
     </ul>
@@ -44,6 +49,7 @@ import DropdownItem from "./DropdownItem.vue";
 import { UserProps } from "../store";
 import { useStore } from "vuex";
 import router from "@/router";
+import { useRoute } from "vue-router";
 
 export default defineComponent({
   components: { Dropdown, DropdownItem },
@@ -55,6 +61,9 @@ export default defineComponent({
     },
   },
   setup() {
+    const route = useRoute();
+    console.log(route.query.id);
+
     const store = useStore();
     const logOut = () => {
       store.commit("logout");
@@ -62,6 +71,7 @@ export default defineComponent({
     };
     return {
       logOut,
+      route,
     };
   },
 });
