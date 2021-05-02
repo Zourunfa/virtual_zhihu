@@ -52,9 +52,12 @@ export default defineComponent({
     //    const a = require('@/assets/lizhi.jpg')
     //       console.log(a);
     // })
+    console.log(props);
 
     const columnList = computed(() => {
       return props.list.map((column) => {
+        // console.log(column);
+
         // console.log(column.avator.url);
         // 如果这个的avator属性不存在，就给他设置下面李志的图片
         if (!column.avatar) {

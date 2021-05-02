@@ -57,7 +57,7 @@ export default defineComponent({
     // console.log(store.getters.getColumnsById(currentId).avatar);
 
     const list = computed(() => store.getters.getPostsById(currentId));
-    // console.log(list);
+    console.log(list);
 
     // console.log(list);
 

@@ -50,7 +50,7 @@ export interface GlobalDataProps {
   error: GlobalErrorProps;
   token: string;
   loading: boolean;
-  columns: ColumnProps[];
+  columns: GlobalColumns;
   posts: PostProps[];
   user: UserProps;
 }
@@ -60,6 +60,11 @@ export interface ImageProps {
   url?: string;
   createdAt?: string;
   fitUrl?: string;
+}
+
+export interface GlobalColumns {
+  data: ColumnProps[];
+  total: number;
 }
 
 
@@ -75,7 +80,7 @@ const postAndCommit = async (url: string, mutationName: string, commit: Commit, 
   commit(mutationName, res.data)
   return res.data
 }
-const asyncAndCommit = async (url: string, mutationName: string, commit: Commit, payload: any, config: AxiosRequestConfig = { method: 'get' }) => {
+const asyncAndCommit = async (url: string, mutationName: string, commit: Commit, config: AxiosRequestConfig = { method: 'get' }) => {
   const res = await axios(url, config)
   console.log(res.data);
 
@@ -91,7 +96,7 @@ const store = createStore<GlobalDataProps>({
     },
     token: localStorage.getItem('token') || '',
     loading: false,
-    columns: [],
+    columns: { data: [], total: 0 },
     posts: [],
     user: { isLogin: false, email: '', column: '' },
   },
@@ -103,10 +108,17 @@ const store = createStore<GlobalDataProps>({
       state.posts.push(newPost);
     },
     fetchColumns(state, rawData) {
-      state.columns = rawData.data.list
+      // state.columns.data = rawData.data.list
+      console.log(rawData);
+      const { data } = state.columns
+      const { list, count } = rawData.data
+      state.columns.data = data.concat(list)
+      state.columns.total = count
+      console.log(state.columns);
+
     },
     fetchColumn(state, rawData) {
-      state.columns = [rawData.data]
+      state.columns.data = [rawData.data]
     },
     fetchPosts(state, rawData) {
       state.posts = rawData.data.list
@@ -118,6 +130,8 @@ const store = createStore<GlobalDataProps>({
       state.loading = status
     },
     login(state, rawData) {
+      console.log(rawData);
+
       const { token } = rawData.data
       console.log(token);
 
@@ -143,7 +157,7 @@ const store = createStore<GlobalDataProps>({
     updatePost(state, { data }) {
 
       state.posts = state.posts.map(post => {
-        console.log(data);
+        // console.log(data);
 
         if (post._id === data._id) {
           console.log(data._id);
@@ -156,7 +170,7 @@ const store = createStore<GlobalDataProps>({
       })
     },
     deletePost(state, { data }) {
-      console.log(state.posts, data);
+      // console.log(state.posts, data);
       state.posts = state.posts.filter(item => {
         return item !== data._id
       })
@@ -169,11 +183,11 @@ const store = createStore<GlobalDataProps>({
   // getters就好比store的计算属性
   getters: {
     biggerColumnsLen(state) {
-      return state.columns.filter((c) => c._id > '2').length;
+      return state.columns.data.filter((c) => c._id > '2').length;
     },
     // getter可以传参
     getColumnsById: (state) => (id: string) => {
-      return state.columns.find((c) => {
+      return state.columns.data.find((c) => {
         return c._id === id
       });
     },
@@ -198,8 +212,11 @@ const store = createStore<GlobalDataProps>({
     }
   },
   actions: {
-    fetchColumns({ commit }) {
-      return getAndCommit('/api/columns', 'fetchColumns', commit)
+    fetchColumns({ state, commit }, params = {}) {
+      const { currentPage = 1, pageSize = 6 } = params
+      return getAndCommit(`/api/columns?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit)
+      // const { currentPage = 1, pageSize = 5 } = params
+      // if(state.columns.currentPage)
     },
     fetchColumn({ commit }, cid) {
       return getAndCommit(`/api/columns/${cid}`, 'fetchColumn', commit)

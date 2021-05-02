@@ -18,13 +18,13 @@
     <h4 class="font-weight-bold text-center">发现精彩</h4>
     <ColumnList :list="list"></ColumnList>
     <div class="d-grid gap-2 col-6 mx-auto">
-      <!-- <button
-        class="btn btn-outline-primary mt-2 mb-5 mx-auto btn-block w-25"
+      <button
         @click="loadMorePage"
         v-if="!isLastPage"
+        class="btn btn-outline-primary mt-2 mb-5 mx-auto btn-block w-25"
       >
         加载更多
-      </button> -->
+      </button>
     </div>
   </div>
 </template>
@@ -41,6 +41,7 @@ import ColumnList from "../components/ColumnList.vue";
 import { useStore } from "vuex";
 import { GlobalDataProps, ImageProps } from "../store";
 import createMessage from "@/components/createMessage";
+import useLoadMore from "@/hooks/useLoadMore";
 export interface ResponseType<p = {}> {
   code: number;
   msg: string;
@@ -61,7 +62,12 @@ export default defineComponent({
     onMounted(() => {
       store.dispatch("fetchColumns");
     });
-    const list = computed(() => store.state.columns);
+    const list = computed(() => {
+      console.log(store.state.columns.data);
+      return store.state.columns.data;
+    });
+    const total = computed(() => store.state.columns.total);
+    const { loadMorePage, isLastPage } = useLoadMore("fetchColumns", total);
     // console.log(list);
     const onFileUploaded = (rawData: ResponseType<ImageProps>) => {
       createMessage(`上传图片ID ${rawData.data._id}`, "success");
@@ -71,8 +77,8 @@ export default defineComponent({
       list,
       bigLen,
       onFileUploaded,
-      //     loadMorePage,
-      //     isLastPage
+      loadMorePage,
+      isLastPage,
     };
   },
 });

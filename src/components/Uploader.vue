@@ -13,7 +13,6 @@
         name="uploaded"
         v-else-if="fileStatus === 'success'"
       >
-        {{ uploadedData }}
         <button class="btn btn-primary" disabled>上传成功</button>
       </slot>
       <slot name="default" v-else>
